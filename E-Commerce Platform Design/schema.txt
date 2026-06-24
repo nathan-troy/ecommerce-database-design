@@ -1,0 +1,55 @@
+--Schema--
+
+CREATE TABLE Users (
+    UserID SERIAL PRIMARY KEY,
+    AddressLine1 VARCHAR(50) NOT NULL,
+    AddressLine2 VARCHAR(50),
+    FirstName VARCHAR(20) NOT NULL,
+    Surname VARCHAR(50) NOT NULL
+    );
+
+CREATE TABLE Products (
+    ProductID SERIAL PRIMARY KEY,
+    ProductName VARCHAR(30) NOT NULL,
+    ProductPrice DECIMAL(10, 2) NOT NULL,
+    DistributorName VARCHAR(30) NOT NULL
+    );
+
+CREATE TABLE UserTransactions (
+    TransactionID SERIAL PRIMARY KEY,
+    Amount DECIMAL(10, 2) NOT NULL,
+    TransactionType VARCHAR(20) NOT NULL CHECK (TransactionType IN ('Deposit', 'Purchase', 'Refund')),
+    Timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UserID INT NOT NULL REFERENCES Users(UserID) ON DELETE CASCADE
+    );
+
+CREATE TABLE Orders (
+    OrderID SERIAL PRIMARY KEY,
+    UserID INT NOT NULL REFERENCES Users(UserID) ON DELETE RESTRICT,
+    DeliveryDate TIMESTAMP,
+    OrderDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+CREATE TABLE Order_items (
+    OrderItemID SERIAL PRIMARY KEY,
+    OrderID INT NOT NULL REFERENCES Orders(OrderID) ON DELETE RESTRICT,
+    ProductID INT NOT NULL REFERENCES Products(ProductID) ON DELETE RESTRICT,
+    PriceAtPurchase DECIMAL(10, 2) NOT NULL,
+    Quantity INT NOT NULL CHECK (Quantity > 0)
+    );
+
+CREATE TABLE InventoryLedger (
+    InventoryID SERIAL PRIMARY KEY,
+    ProductID INT NOT NULL REFERENCES Products(ProductID) ON DELETE RESTRICT,
+    QuantityChange INT NOT NULL CHECK (QuantityChange <> 0),
+    Reason VARCHAR(50) NOT NULL CHECK (Reason IN ('RESTOCK', 'SALE', 'DAMAGED', 'RETURN')),
+    Timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+CREATE TABLE Cart_items (
+    UserID INT NOT NULL REFERENCES Users(UserID) ON DELETE CASCADE,
+    ProductID INT NOT NULL REFERENCES Products(ProductID) ON DELETE CASCADE,
+    Quantity INT NOT NULL CHECK (Quantity > 0),
+    TimeAdded TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (UserID, ProductID)
+    );
